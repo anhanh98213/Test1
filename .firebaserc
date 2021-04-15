@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "e-school-388cd": {
+      "hosting": {
+        "SMS-Web": [
+          "e-school-388cd"
+        ]
+      }
+    }
+  }
+}
