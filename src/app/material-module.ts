@@ -92,7 +92,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     PortalModule,
     ScrollingModule,
     MatFormFieldModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    
   ]
 })
 export class MaterialModule {}

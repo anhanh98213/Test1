@@ -1,1 +1,21 @@
-<p>sidebar works!</p>
+<div class="img bg-wrap text-center">
+    <div class="user-logo">
+        <!-- <img class="rounded-circle mt-2" style="width:150px; height: 150px;" src="../../../assets/image/logo.png" alt="user"> -->
+        <div *ngIf="user">
+            <h1>{{user.firstName}} {{user.lastName}}</h1>
+        </div>
+    </div>
+</div>
+
+<!-- Admin -->
+<mat-accordion>
+    <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = false">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <mat-icon class="mr-3">dashboard</mat-icon>
+                Dashboard
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+        <button mat-stroked-button color="primary" class="btn btn-block" routerLink="">View Dashboard</button>
+    </mat-expansion-panel>
+</mat-accordion>

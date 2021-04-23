@@ -1,72 +1,64 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { AngularFirestore, AngularFirestoreDocument } from '@angular/fire/firestore';
+import { AngularFirestore } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { User } from './user';
 
 @Injectable({
-  providedIn: 'root'
+	providedIn: 'root'
 })
 export class AuthService {
 
-  constructor(
-    public afs: AngularFirestore,   // Inject Firestore service
-    public afAuth: AngularFireAuth, // Inject Firebase auth service
-    public fireStore: AngularFirestore,
-    public router: Router,
-  ) { }
+	userData: any
 
-  // Sign in with email/password
-  login(email: string, password: string) {
-    return this.afAuth.signInWithEmailAndPassword(email, password)
-      .then(async (result) => {
-        return this.fireStore.collection('users').doc(result.user?.uid).get().toPromise().then((doc: any) => {
-          if (doc.exists) return doc.data().user
-          else return null
-        }).catch((error: { message: string; }) => {
-          return null
-        });
+	constructor(
+		public afu: AngularFireAuth,
+		public afs: AngularFirestore,   // Inject Firestore service
+		public router: Router,
+		public ngZone: NgZone, // NgZone service to remove outside scope warning
+	) { }
 
-      }).catch((error: { message: string; }) => {
-        return null;
-      })
-  }
+	login(email: string, password: string) {
+		this.afu.signInWithEmailAndPassword(email, password).then(async () => {
+			var user = await this.afu.currentUser
+			await this.getUserFS(user?.uid!)
+			this.getRole();
+		}).catch((error) => {
+			var errorCode = error.code;
+			var errorMessage = error.message;
+		});
+	}
 
-  getUser(uid: any) {
-    return this.fireStore.collection('users').doc(uid).get().toPromise().then((doc) => {
-      if (doc.exists) {
-        return doc.data()
-      }
-      else return null
-    }).catch((error: { message: string; }) => {
-      return null
-    });
-  }
+	logOut() {
+		localStorage.removeItem('user');
+		this.afu.signOut().then(() => {
+			console.log('logOut');
+		})
+	}
 
-  // Returns true when user is looged in and email is verified
-  get isLoggedIn(): boolean {
-    const user = JSON.parse(localStorage.getItem('user')!);
-    return (user !== null && user.emailVerified !== false) ? true : false;
-  }
+	getUserFS(uid: string) {
+		this.afs.collection('users').doc(uid).get().toPromise().then((doc: any) => {
+			if (doc.exists) {
+				const user = doc.data().user
+				localStorage.setItem('user', JSON.stringify(user));
+				this.userData = user
+			}
+		}).catch((error: { message: string; }) => {
+			console.log(error);
+		});
+	}
 
-  setUserData(user: any) {
-    const userRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}`);
-    const userData: User = {
-      uid: user.uid,
-      email: user.email
-    }
-    return userRef.set(userData, {
-      merge: true
-    })
-  }
-
-  // Sign out 
-  signOut() {
-    return this.afAuth.signOut().then(() => {
-      // localStorage.removeItem('user');
-      localStorage.clear()
-      this.router.navigate(['sign-in']);
-    })
-  }
+	getRole() {
+		if (this.userData.role == 'admin') {
+			this.router.navigate(['dashboardAdmin']);
+		} else if (this.userData.role == 'manager') {
+			this.router.navigate(['dashboardManager']);
+		}
+		else if (this.userData.role == 'lecturer') {
+			this.router.navigate(['dashboardLecturer']);
+		}
+		else if (this.userData.role == 'student') {
+			this.router.navigate(['dashboardStudent']);
+		}
+	}
 
 }
